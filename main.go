@@ -3,12 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
+	reverse "kproxy/reverse"
 	"math/rand"
 	"net"
+	"net/http"
 	"net/url"
-	"strings"
-	"time"
 )
 
 func randomIPv6AddressFromSubnet(subnet string) (net.IP, error) {
@@ -36,69 +35,6 @@ func randomIPv6AddressFromSubnet(subnet string) (net.IP, error) {
 
 	return ip, nil
 }
-func handleRequest(clientConn net.Conn, ipv6Subnet string) {
-	defer clientConn.Close()
-
-	var buffer [4096]byte
-	n, err := clientConn.Read(buffer[:])
-	if err != nil {
-		fmt.Println("Error reading from client:", err)
-		return
-	}
-
-	requestLine := strings.Split(string(buffer[:n]), "\r\n")[0]
-	requestParts := strings.Split(requestLine, " ")
-	if len(requestParts) != 3 {
-		fmt.Println("Invalid request line:", requestLine)
-		return
-	}
-
-	rawURL := requestParts[1]
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		fmt.Println("Error parsing URL:", err)
-		return
-	}
-
-	host := parsedURL.Host
-	if !strings.Contains(host, ":") {
-		defaultPort := "80"
-		if parsedURL.Scheme == "https" {
-			defaultPort = "443"
-		}
-		host = host + ":" + defaultPort
-	}
-
-	randomIPv6, err := randomIPv6AddressFromSubnet(ipv6Subnet)
-	if err != nil {
-		fmt.Println("Error generating random IPv6 address:", err)
-		return
-	}
-
-	dialer := &net.Dialer{
-		Timeout:   30 * time.Second,
-		KeepAlive: 30 * time.Second,
-		LocalAddr: &net.TCPAddr{
-			IP:   randomIPv6,
-			Port: 0,
-		},
-	}
-
-	targetConn, err := dialer.Dial("tcp", host)
-	if err != nil {
-		fmt.Println("Error connecting to target server:", err)
-		return
-	}
-	defer targetConn.Close()
-
-	targetConn.Write(buffer[:n])
-
-	go func() {
-		io.Copy(targetConn, clientConn)
-	}()
-
-	io.Copy(clientConn, targetConn)
-}
 
 func main() {
 	bindAddr := flag.String("b", ":8080", "Bind IP:Port")
@@ -110,20 +46,15 @@ func main() {
 		return
 	}
 
-	listener, err := net.Listen("tcp", *bindAddr)
-	if err != nil {
-		fmt.Println("Error starting proxy server:", err)
-		return
-	}
-
-	fmt.Printf("Proxy server started on %s\n", *bindAddr)
-	for {
-		clientConn, err := listener.Accept()
+	http.ListenAndServe(*bindAddr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path, err := url.Parse("http://" + r.Host)
 		if err != nil {
-			fmt.Println("Error accepting client connection:", err)
-			continue
+			panic(err)
+			return
 		}
+		proxy := reverse.NewReverseProxy(path)
+		ip, err := randomIPv6AddressFromSubnet(*ipv6Subnet)
+		proxy.ServeHTTP(w, r, ip)
+	}))
 
-		go handleRequest(clientConn, *ipv6Subnet)
-	}
 }
