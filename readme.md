@@ -38,3 +38,69 @@ kproxy是一个简单的基于TCP的HTTP代理服务器，使用Golang编写，�
 ## 注意 / Note
 
 为了确保最佳性能，您可能需要根据您的具体需求和应用场景对代码进行调整和优化。 / To ensure optimal performance, you may need to adjust and optimize the code according to your specific needs and application scenarios.
+
+方案一：使用 HE.net 的隧道服务获取 IPv6
+
+Hurricane Electric（HE.net）提供了一种免费的隧道服务，用于获取 IPv6 地址。以下是详细的操作步骤：
+
+注册 HE.net 账号
+
+访问 HE.net 隧道服务页面，点击 "Create Account" 按钮创建一个新账号。
+
+创建隧道
+
+登录账号后，点击 "Create Regular Tunnel"，输入您的 IPv4 地址，选择离您最近的隧道服务器，然后点击 "Create Tunnel"。
+
+配置隧道
+
+在创建的隧道的详细信息页面，按照提供的示例配置您的操作系统。这些示例包括了 Windows、macOS、Linux 等操作系统的配置方法。
+
+验证配置
+
+配置完成后，使用 ping 命令测试 IPv6 连接是否正常工作。例如，可以尝试 ping ipv6.google.com。
+
+方案二：在 Vultr 上使用 ndppd 进行转发获取 IPv6
+Vultr 提供了一种在其 VPS 上通过 ndppd 转发 IPv6 地址的方法。以下是详细的操作步骤：
+
+在 Vultr 购买 VPS
+
+访问 Vultr 官网，购买一台支持 IPv6 的 VPS。
+
+安装 ndppd
+
+以 root 用户身份登录 VPS，然后执行以下命令安装 ndppd：
+
+
+```bash
+sudo apt-get update
+sudo apt-get install ndppd
+```
+配置 ndppd
+
+创建一个名为 ndppd.conf 的配置文件，并编辑内容如下：
+
+```bash
+route-ttl 30000
+proxy eth0 {
+  router yes
+  timeout 500
+  ttl 30000
+  rule 2001:19f0:xxxx:xxxx::/64 {
+    static
+  }
+}
+
+```
+请将 2001:19f0:xxxx:xxxx::/64 替换为您的 VPS 分配的 IPv6 地址段。
+
+启动 ndppd
+
+将 ndppd.conf 文件上传至 VPS 的 /etc/ 目录下，然后执行以下命令启动 ndppd 服务：
+
+```bash
+sudo systemctl enable ndppd
+sudo systemctl start ndppd
+```
+验证配置
+
+在本地设备上配置静态 IPv6 地址，然后使用 ping 命令测试连接是否正常工作。例如，尝试 ping ipv6.google.com。
