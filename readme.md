@@ -108,7 +108,7 @@ sudo systemctl start ndppd
 
 ## 许可
 
-Alconna 采用 [MIT](LICENSE) 许可协议
+KProxy 采用 [MIT](LICENSE) 许可协议
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknva%2Fkproxy.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknva%2Fkproxy?ref=badge_large)
 
