@@ -104,3 +104,16 @@ sudo systemctl start ndppd
 验证配置
 
 在本地设备上配置静态 IPv6 地址，然后使用 ping 命令测试连接是否正常工作。例如，尝试 ping ipv6.google.com。
+
+
+## 许可
+
+Alconna 采用 [MIT](LICENSE) 许可协议
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FArcletProject%2FAlconna.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FArcletProject%2FAlconna?ref=badge_large)
+
+## 鸣谢
+
+[JetBrains](https://www.jetbrains.com/): 为本项目提供 [GoLand](https://www.jetbrains.com/goland/) 等 IDE 的授权<br>
+[<img src="https://cdn.jsdelivr.net/gh/Kyomotoi/CDN@master/noting/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/)
+
